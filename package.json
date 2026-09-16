@@ -1,0 +1,17 @@
+{
+  "name": "media-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "新媒体素材工作台 - 关键词聚合搜索并下载免费视频素材",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

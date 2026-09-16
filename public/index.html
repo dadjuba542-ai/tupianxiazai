@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>素材工作台 · 免费视频聚合下载</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">◈</div>
+        <div class="brand-text">
+          <h1>素材工作台</h1>
+          <p>免费视频素材 · 关键词聚合 · 一键下载</p>
+        </div>
+      </div>
+      <form id="search-form" class="search">
+        <svg viewBox="0 0 24 24" class="search-icon" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <line x1="21" y1="21" x2="16.7" y2="16.7" />
+        </svg>
+        <input
+          id="q"
+          type="text"
+          placeholder="输入关键词，如：咖啡 / 城市夜景 / 海浪 / 复古电影"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="submit" id="search-btn">搜索</button>
+      </form>
+    </header>
+
+    <main>
+      <section class="sources" id="sources"></section>
+      <section class="domestic hidden" id="domestic"></section>
+      <section class="domestic movie hidden" id="movie-search"></section>
+      <div class="meta" id="meta"></div>
+      <section class="grid" id="grid"></section>
+      <div class="state" id="state">
+        <div class="state-icon">⌕</div>
+        <p>输入关键词，从多个免费素材站聚合搜索</p>
+      </div>
+    </main>
+
+    <aside class="dock collapsed hidden" id="dock">
+      <div class="dock-head">
+        <button class="dock-toggle" id="dock-toggle" type="button" aria-expanded="false">
+          <span class="chev">▶</span>
+          <span class="dock-title">下载任务</span>
+          <span class="pill" id="task-count">0</span>
+          <span class="pill sel" id="sel-count">已选 0</span>
+          <span class="pill" id="stat-count" title="今日下载量 / 每日上限">今日 0/500</span>
+        </button>
+        <div class="dock-actions">
+          <button class="btn ghost" id="clear-btn">清空</button>
+          <button class="btn ghost" id="open-btn">打开目录</button>
+          <button class="btn primary" id="download-btn">下载所选</button>
+        </div>
+      </div>
+      <div class="dock-progress" id="dock-progress"><i></i></div>
+      <div class="dock-body" id="dock-body">
+        <div class="task-toolbar">
+          <button class="mini" id="select-all-btn">全选</button>
+          <button class="mini" id="select-done-btn">选中已完成</button>
+          <button class="mini danger" id="delete-selected-btn">删除所选</button>
+          <button class="mini" id="clear-finished-btn">清除已完成</button>
+        </div>
+        <div class="tasks" id="tasks"></div>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast"></div>
+    <script src="/app.js"></script>
+  </body>
+</html>
