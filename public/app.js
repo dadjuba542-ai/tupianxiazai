@@ -204,15 +204,24 @@ async function doSearch() {
 }
 
 function renderResults(data) {
+  const nameOf = (id) => state.sources.find((s) => s.id === id)?.name || id;
   const counts = data.counts || {};
   const parts = Object.entries(counts)
     .filter(([, n]) => n > 0)
-    .map(([id, n]) => `${esc(id)} ${n}`);
+    .map(([id, n]) => `${esc(nameOf(id))} ${n}`);
+  const droppedTotal = Object.values(data.dropped || {}).reduce((a, b) => a + b, 0);
+
   let meta = `共 <b>${data.count}</b> 条 · ${data.elapsed}ms`;
+  if (data.translation?.used)
+    meta += ` · <span class="tr">已译为「${esc(data.translation.en)}」</span>（${
+      data.translation.by === "glossary" ? "术语词典" : "在线翻译"
+    }）`;
   if (parts.length) meta += ` · ${parts.join(" / ")}`;
+  if (droppedTotal > 0)
+    meta += ` · <span class="dim">已过滤 ${droppedTotal} 条不相关</span>`;
   if (data.errors?.length)
     meta += ` · <span class="err">${data.errors
-      .map((e) => `${esc(e.source)}: ${esc(e.message)}`)
+      .map((e) => `${esc(nameOf(e.source))}: ${esc(e.message)}`)
       .join("; ")}</span>`;
   el.meta.innerHTML = meta;
 

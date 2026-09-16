@@ -329,6 +329,12 @@ body {
 .meta .err {
   color: var(--err);
 }
+.meta .tr {
+  color: var(--ok);
+}
+.meta .dim {
+  opacity: 0.6;
+}
 
 /* ---------- Grid ---------- */
 .grid {

@@ -42,6 +42,7 @@ export default {
         source: "pixabay",
         sourceName: "Pixabay",
         title: (h.tags || `Pixabay ${h.id}`).split(",")[0].trim(),
+        matchText: h.tags || "",
         thumbnail: best.thumbnail || preview.thumbnail || "",
         previewUrl: preview.url,
         videoUrl: best.url,

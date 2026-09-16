@@ -38,11 +38,16 @@ app.get("/api/search", async (req, res) => {
 
   const startedAt = Date.now();
   try {
-    const { items, errors, counts } = await searchAll(q, { sources, limit });
+    const { items, errors, counts, dropped, translation } = await searchAll(q, {
+      sources,
+      limit,
+    });
     res.json({
       query: q,
       count: items.length,
       counts,
+      dropped,
+      translation,
       errors,
       elapsed: Date.now() - startedAt,
       items,
