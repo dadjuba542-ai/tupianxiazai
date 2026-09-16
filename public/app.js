@@ -341,6 +341,12 @@ function updateDock() {
     : 0;
   document.getElementById("dock-progress").firstElementChild.style.width = `${overall}%`;
 
+  if (state.stats?.proxy) {
+    document
+      .getElementById("proxy-flag")
+      .classList.toggle("hidden", !state.stats.proxy.enabled);
+  }
+
   if (state.stats) {
     const { count, limit, active: act, queued } = state.stats;
     const el2 = document.getElementById("stat-count");
@@ -397,6 +403,14 @@ document.getElementById("clear-finished-btn").addEventListener("click", async ()
   renderTasks();
   updateDock();
   toast(`已清除 ${(data.deleted || []).length} 个已完成任务`);
+});
+
+document.getElementById("quit-btn").addEventListener("click", async () => {
+  if (!confirm("确定退出工作台？后台服务将立即停止，进行中的下载会被中断。")) return;
+  try {
+    await fetch("/api/quit", { method: "POST" });
+  } catch {}
+  document.getElementById("bye").classList.remove("hidden");
 });
 
 async function taskAction(id, action) {

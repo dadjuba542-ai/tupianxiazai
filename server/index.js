@@ -12,9 +12,11 @@ import {
   resumeTask,
   deleteTasks,
   clearFinished,
+  shutdown,
   publicStats,
   DOWNLOAD_DIR,
 } from "./downloader.js";
+import { proxyStatus } from "./proxy.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -64,7 +66,12 @@ app.get("/api/progress", (req, res) => {
 });
 
 app.get("/api/stats", (_req, res) => {
-  res.json(publicStats());
+  res.json({ ...publicStats(), proxy: proxyStatus() });
+});
+
+app.post("/api/quit", (_req, res) => {
+  res.json({ ok: true });
+  setTimeout(shutdown, 250);
 });
 
 app.post("/api/download", (req, res) => {

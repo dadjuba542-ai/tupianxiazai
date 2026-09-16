@@ -1,8 +1,12 @@
+import { dispatcherFor } from "../proxy.js";
+
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
   "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
-export async function fetchText(url, { timeout = 15000, headers = {} } = {}) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function once(url, timeout, headers) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeout);
   try {
@@ -15,12 +19,30 @@ export async function fetchText(url, { timeout = 15000, headers = {} } = {}) {
       },
       signal: ac.signal,
       redirect: "follow",
+      dispatcher: dispatcherFor(url),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.text();
   } finally {
     clearTimeout(timer);
   }
+}
+
+export async function fetchText(url, { timeout = 15000, headers = {}, retries = 2 } = {}) {
+  let lastErr;
+  for (let i = 0; i <= retries; i += 1) {
+    try {
+      return await once(url, timeout, headers);
+    } catch (err) {
+      lastErr = err;
+      const msg = String(err?.message || "");
+      const httpErr = /^HTTP \d+$/.test(msg);
+      const transient = !httpErr && /fetch failed|abort|ECONN|ETIMEDOUT|socket|network|other side closed/i.test(msg);
+      if (!transient || i === retries) throw err;
+      await sleep(400 * 2 ** i);
+    }
+  }
+  throw lastErr;
 }
 
 export async function fetchJson(url, opts = {}) {

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { dispatcherFor } from "./proxy.js";
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
@@ -257,6 +258,22 @@ export function deleteTasks(ids) {
   return removed;
 }
 
+export function shutdown() {
+  const all = [...tasks.values()];
+  for (const t of all) {
+    t.status = "deleted";
+    controllers.get(t.id)?.abort();
+    const i = queue.indexOf(t);
+    if (i >= 0) queue.splice(i, 1);
+  }
+  tasks.clear();
+  queue.length = 0;
+  setTimeout(() => {
+    for (const t of all) unlink(t.file);
+    process.exit(0);
+  }, 400);
+}
+
 export function clearFinished() {
   return deleteTasks(
     [...tasks.values()]
@@ -324,6 +341,7 @@ async function downloadOnce(task) {
         headers,
         redirect: "follow",
         signal: ac.signal,
+        dispatcher: dispatcherFor(item.videoUrl),
       });
     } catch (err) {
       if (ac.signal.aborted) return;

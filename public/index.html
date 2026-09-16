@@ -15,7 +15,13 @@
         <div class="logo">◈</div>
         <div class="brand-text">
           <h1>素材工作台</h1>
-          <p>免费视频素材 · 关键词聚合 · 一键下载</p>
+          <p>
+            免费视频素材 · 关键词聚合 · 一键下载<span
+              class="proxy-flag hidden"
+              id="proxy-flag"
+              >· 代理已启用</span
+            >
+          </p>
         </div>
       </div>
       <form id="search-form" class="search">
@@ -32,7 +38,16 @@
         />
         <button type="submit" id="search-btn">搜索</button>
       </form>
+      <button class="quit-btn" id="quit-btn" title="停止后台服务并退出">退出工作台</button>
     </header>
+
+    <div class="bye hidden" id="bye">
+      <div class="bye-card">
+        <div class="bye-icon">■</div>
+        <h2>工作台已退出</h2>
+        <p>后台服务已停止，现在可以关闭这个标签页了。</p>
+      </div>
+    </div>
 
     <main>
       <section class="sources" id="sources"></section>
