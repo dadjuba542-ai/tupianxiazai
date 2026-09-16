@@ -3,6 +3,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { dispatcherFor } from "./proxy.js";
+import { downloadWithYtdlp } from "./ytdlp.js";
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
@@ -135,6 +136,32 @@ function unlink(file) {
   } catch {}
 }
 
+function ytdlpCleanup(dir, base) {
+  if (!dir || !base) return;
+  try {
+    for (const f of fs.readdirSync(dir)) {
+      if (f === base || f.startsWith(`${base}.`)) {
+        try {
+          fs.unlinkSync(path.join(dir, f));
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
+function cleanupTask(task) {
+  if (task?.outBase) ytdlpCleanup(task.dir, task.outBase);
+  unlink(task?.file);
+}
+
+function ytdlpBaseTaken(dir, base) {
+  try {
+    return fs.readdirSync(dir).some((f) => f === base || f.startsWith(`${base}.`));
+  } catch {
+    return false;
+  }
+}
+
 async function throttle(rawUrl) {
   let host = "default";
   try {
@@ -191,7 +218,7 @@ export function enqueue(items, keyword) {
   const created = [];
 
   for (const item of items) {
-    if (!item?.videoUrl) continue;
+    if (!item?.videoUrl && item?.engine !== "ytdlp") continue;
     const task = {
       id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       title: item.title || "untitled",
@@ -250,7 +277,7 @@ export function deleteTasks(ids) {
     tasks.delete(id);
     const i = queue.indexOf(task);
     if (i >= 0) queue.splice(i, 1);
-    if (!running) unlink(task.file);
+    if (!running) cleanupTask(task);
     removed.push(id);
     broadcast({ type: "removed", id });
   }
@@ -285,7 +312,7 @@ export function clearFinished() {
 /* ---------------- worker ---------------- */
 async function run(task) {
   const item = task.item;
-  if (!item?.videoUrl) return;
+  if (!item?.videoUrl && item?.engine !== "ytdlp") return;
 
   for (let attempt = 0; attempt <= CONFIG.maxRetries; attempt += 1) {
     if (task.status === "deleted" || task.status === "paused") return;
@@ -327,6 +354,11 @@ async function downloadOnce(task) {
   broadcast({ type: "update", task: publicTask(task) });
 
   try {
+    if (item.engine === "ytdlp") {
+      await ytdlpDownload(task, ac);
+      return;
+    }
+
     const startAt = task.received > 0 && task.file ? task.received : 0;
     const headers = {
       "user-agent": UA,
@@ -399,8 +431,52 @@ async function downloadOnce(task) {
     throw err;
   } finally {
     controllers.delete(task.id);
-    if (task.status === "deleted") unlink(task.file);
+    if (task.status === "deleted") cleanupTask(task);
   }
+}
+
+async function ytdlpDownload(task, ac) {
+  const item = task.item;
+
+  if (!task.outBase) {
+    const base = safeName(item.title);
+    let candidate = base;
+    let i = 1;
+    while (ytdlpBaseTaken(task.dir, candidate)) {
+      candidate = `${base} (${i})`;
+      i += 1;
+    }
+    task.outBase = candidate;
+    task.file = path.join(task.dir, `${candidate}.mp4`);
+  }
+
+  const outBase = path.join(task.dir, task.outBase);
+  let last = 0;
+
+  await downloadWithYtdlp(item.webpageUrl, outBase, {
+    signal: ac.signal,
+    onFile: (f) => {
+      task.file = f;
+    },
+    onProgress: (pct) => {
+      task.progress = Math.min(99, Math.max(0, Math.round(pct)));
+      const now = Date.now();
+      if (now - last > 250) {
+        last = now;
+        broadcast({ type: "update", task: publicTask(task) });
+      }
+    },
+  });
+
+  if (ac.signal.aborted) return;
+
+  task.status = "done";
+  task.progress = 100;
+  try {
+    if (task.file && fs.existsSync(task.file)) task.total = fs.statSync(task.file).size;
+    task.received = task.total || 0;
+  } catch {}
+  broadcast({ type: "update", task: publicTask(task) });
 }
 
 function publicTask(t) {

@@ -18,6 +18,19 @@ if (PROXY_URL) {
 }
 
 export const proxyEnabled = Boolean(agent);
+export const proxyUrl = agent ? PROXY_URL : "";
+
+export function shouldProxy(url) {
+  if (!agent) return false;
+  let host = "";
+  try {
+    host = new URL(url).host.toLowerCase();
+  } catch {
+    return false;
+  }
+  if (PROXY_HOSTS.includes("*")) return true;
+  return PROXY_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+}
 
 export function proxyStatus() {
   return {
@@ -29,14 +42,5 @@ export function proxyStatus() {
 }
 
 export function dispatcherFor(url) {
-  if (!agent) return undefined;
-  let host = "";
-  try {
-    host = new URL(url).host.toLowerCase();
-  } catch {
-    return undefined;
-  }
-  if (PROXY_HOSTS.includes("*")) return agent;
-  const hit = PROXY_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
-  return hit ? agent : undefined;
+  return shouldProxy(url) ? agent : undefined;
 }

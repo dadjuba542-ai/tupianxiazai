@@ -7,11 +7,13 @@ import sucai999 from "./sucai999.js";
 import xinpianchang from "./xinpianchang.js";
 import newcger from "./newcger.js";
 import nasa from "./nasa.js";
+import youtube from "./youtube.js";
 
 export const providers = [
   newcger,
   sucai999,
   xinpianchang,
+  youtube,
   nasa,
   mixkit,
   coverr,
